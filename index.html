@@ -1,10 +1,15 @@
 <html>
+    <head>
+        <title>EOSIoT RFID Demo</title>
+    </head>
     <body>
-        <H1>EOSIOT RFID Demo</H1>
+        <H1><u>EOSIoT RFID Demo</u></H1>
         <H2>This simple web-app is running entirely in your browser.</H2>
         <H2>The EOS blockchain is the server. </H2>
-        <H2>Your scanned RFID tag data is displayed below.</H2><br>
-        Enter your RFID scanner device ID (e.g. 942149182):<br>
+        <H2>Your scanned RFID tag data is displayed below.</H2>
+        <H2>Scan a tag and see it show up here within seconds.</H2>
+        <br>
+        Enter your RFID scanner device ID (e.g. 942140182):<br>
         <input type="text" id="devid" value="0">
         <button type="button" onclick="setDevId()">Apply</button>
         <br><br>
@@ -15,14 +20,17 @@
         <textarea name="textarea" rows="10" cols="50">
         Your RFID scanner data on the EOS blockchain shows up here when you enter a valid scanner device ID.
         </textarea>
+        <!--
         <button type="button" id="start">Start</button>
         <button type="button" id="stop">Stop</button>
         <input type="text" id="period" value="0">
+        !-->
+        <br><br>
+        <li><a href="https://github.com/EOSIoT/rfid-scanner-node">Open source RFID device software.</a></li>
+        <li><a href="https://github.com/EOSIoT/rfid-contract">The EOS RFID smart contract.</a></li>
+        <li><a href="https://github.com/EOSIoT/rfid-html">This web-app's source code.</a></li>
         <br>
-        <a href="https://github.com/EOSIoT/rfid-scanner-node">Open source RFID device software.</a>
-        <a href="https://github.com/EOSIoT/rfid-contract">The EOS smart contract.</a>
-        <a href="https://github.com/EOSIoT/rfid-html">This web-app's source code.</a>
-
+        &copy;EOSIoT 2019.  EOSIoT builds value by bringing IoT and blockchain together.
         
         <script src='dist-web/eosjs-api.js'></script>
         <script src='dist-web/eosjs-jsonrpc.js'></script>
@@ -128,8 +136,12 @@
                         }              
                     }
 
-                    for (var d in scannedData) {
-                        pre.textContent += scannedData[d] + "\n";
+                    if (scannedData.length > 0) {
+                        for (var d in scannedData) {
+                            pre.textContent += scannedData[d] + "\n";
+                        }
+                    } else {
+                        pre.textContent += "No data found for ID " + DevId + "\n";
                     }
                
                 } catch (e) {
