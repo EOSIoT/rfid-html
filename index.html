@@ -100,7 +100,7 @@
                         code: 'eosiot11rfid',     // Contract that we target
                         scope: 'eosiot11rfid',         // Account that owns the data
                         table: 'scanners',        // Table name
-                        limit: 10,               // Maximum number of rows that we want to get
+                        limit: 10,               // Maximum number of rows (scanners) that we want to get
                     });
     
                     pre.textContent = "Request submitted\n";
@@ -117,7 +117,9 @@
                         if (rows[row].name == "eosiot11node") {
                             var data = rows[row].scan_data;    
 
-                            for (var i in data) {
+                            // Scanner data is provided oldest first, newest last -> we want to reverse that
+                            // and show the newest first.
+                            for (var i = data.length - 1; i >= 0; i--) {
                                 var d = data[i];
                                 console.log(d.dev_id, DevId);
                                 if (d.dev_id == DevId) {
