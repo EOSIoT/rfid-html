@@ -9,6 +9,11 @@
         <H2>Your scanned RFID tag data is displayed below.</H2>
         <H2>Scan a tag and see it show up here within seconds.</H2>
         <br>
+        <u>Chain Info:</u>
+        <br>
+        <div id="chain_name">Name: EOS Jungle2.0 Testnet</div>
+        <div id="chain_id">ID: searching...</div>
+        <br>
         Enter your RFID scanner device ID (e.g. 942140182):<br>
         <input type="text" id="devid" value="0">
         <button type="button" onclick="setDevId()">Apply</button>
@@ -17,27 +22,33 @@
         <p id="user_devid"></p>
         <br>
         RFID Scanner Data:<br>
-        <textarea name="textarea" rows="10" cols="50">
-        Your RFID scanner data on the EOS blockchain shows up here when you enter a valid scanner device ID.
+        <textarea name="textarea" rows="10" cols="50">Your RFID scanner data on the EOS blockchain shows up here when you enter a valid scanner device ID.
         </textarea>
-        <!--
-        <button type="button" id="start">Start</button>
-        <button type="button" id="stop">Stop</button>
-        <input type="text" id="period" value="0">
-        !-->
         <br><br>
         <li><a href="https://github.com/EOSIoT/rfid-scanner-node">Open source RFID device software.</a></li>
         <li><a href="https://github.com/EOSIoT/rfid-contract">The EOS RFID smart contract.</a></li>
         <li><a href="https://github.com/EOSIoT/rfid-html">This web-app's source code.</a></li>
         <br>
-        &copy;EOSIoT 2019.  EOSIoT builds value by bringing IoT and blockchain together.
-        
+        &copy;EOSIoT 2020.  EOSIoT builds value by bringing IoT and blockchain together.
+
         <script src='dist-web/eosjs-api.js'></script>
         <script src='dist-web/eosjs-jsonrpc.js'></script>
         <script src='dist-web/eosjs-jssig.js'></script>
         <script>
-            //const rpc = new eosjs_jsonrpc.JsonRpc('http://jungle2.cryptolions.io:80');
-            const rpc = new eosjs_jsonrpc.JsonRpc('http://eos.eoscafeblock.com');
+            // Specify an EOS blockchain API endpoint to connect to.
+
+            // Connect to the EOS Jungle2.0 Testnet. The testnet performs and operates
+            // similarly to the mainnet but with unlimited free-to-access resources.  Because
+            // resources are free, this network is operated on a best-effort basis.
+            const rpc = new eosjs_jsonrpc.JsonRpc('http://jungle2.cryptolions.io:80');
+
+            // The EOS mainnet is the flagship network that rewards block miners (producers)
+            // with tokens that exchange for real fiat currency - so there is incentive to maintain this
+            // network.  However because there is real value in the tokens powering this network, 
+            // resources are scarce and come with a cost.  Currently this cost is too high (CPU).
+            // We will be using the testnet for demonstration until the EOS core group figures out a 
+            // solution to the CPU crunch.
+            //const rpc = new eosjs_jsonrpc.JsonRpc('http://eos.eoscafeblock.com');
 
             let pre = document.getElementsByTagName('textarea')[0];
 
@@ -57,52 +68,70 @@
                     DevId = parseInt(devIdBoxValue, 10);
                     document.getElementById("user_devid").innerHTML = DevId.toString(10);
                     HasDevId = true;
-                } catch (e) { 
+                } catch (e) {
                     alert("invalid device ID.  Require number." + e);
                 }
             }
 
+            // try to connect to the chain
+
+            async function pollChain() {
+                try {
+
+                    const resp = await rpc.get_info({
+                        json: true              // Get the response as json
+                    });
+                    document.getElementById("chain_id").innerHTML = "ID: " + resp.chain_id;
+                } catch (e) {
+                    pre.textContent = 'Error contacting blockchain! Caught exception: ' + e;
+                    if (e instanceof eosjs_jsonrpc.RpcError)
+                        pre.textContent += '\n\n' + JSON.stringify(e.json, null, 2);
+                }
+            }
+
+            pollChain();
+
             async function pollData() {
 
                 if (!HasDevId) return;
-            /*
-                    {
-          "rows": [
-            {
-              "name": "eosiot11node",
-              "latency_stats": {
-                "min": "3.00000000000000000",
-                "max": "1556324782.00000000000000000",
-                "var": "0.00000000000000000",
-                "mean": "42062839.10810810327529907"
-              },
-              "scan_data": [
+                /*
+                        {
+              "rows": [
                 {
-                  "scan_time": 4567,
-                  "recv_time": 1556329349,
-                  "dev_id": 1234,
-                  "tag_id": [
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                    6,
-                    7
-                  ]
-                },
-                */
-  
+                  "key": "eosiot11node",
+                  "latency_stats": {
+                    "min": "3.00000000000000000",
+                    "max": "1556324782.00000000000000000",
+                    "var": "0.00000000000000000",
+                    "mean": "42062839.10810810327529907"
+                  },
+                  "scan_data": [
+                    {
+                      "scan_time": 4567,
+                      "recv_time": 1556329349,
+                      "dev_id": 1234,
+                      "tag_id": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7
+                      ]
+                    },
+                    */
+
                 try {
 
                     const resp = await rpc.get_table_rows({
                         json: true,              // Get the response as json
-                        code: 'eosiot11rfid',     // Contract that we target
-                        scope: 'eosiot11rfid',         // Account that owns the data
+                        code: 'eosiot12rfid',     // Contract that we target
+                        scope: 'eosiot12rfid',         // Account that owns the data
                         table: 'scanners',        // Table name
                         limit: 10,               // Maximum number of rows (scanners) that we want to get
                     });
-    
+
                     pre.textContent = "Request submitted\n";
 
                     var rows = resp.rows;
@@ -114,8 +143,8 @@
                     // For the demo there is just the one demo account
                     for (var row in rows) {
                         console.log(rows[row]);
-                        if (rows[row].name == "eosiot11node") {
-                            var data = rows[row].scan_data;    
+                        if (rows[row].key == "eosiot11node") {
+                            var data = rows[row].scan_data;
 
                             // Scanner data is provided oldest first, newest last -> we want to reverse that
                             // and show the newest first.
@@ -136,7 +165,7 @@
                                     console.log(record);
                                 }
                             }
-                        }              
+                        }
                     }
 
                     if (scannedData.length > 0) {
@@ -146,23 +175,17 @@
                     } else {
                         pre.textContent += "No data found for ID " + DevId + "\n";
                     }
-               
+
                 } catch (e) {
                     pre.textContent = 'Error polling blockchain! Caught exception: ' + e;
                     if (e instanceof eosjs_jsonrpc.RpcError)
                         pre.textContent += '\n\n' + JSON.stringify(e.json, null, 2);
                 }
             }
-        
+
             setInterval(pollData, 5000);
 
-            //pollData();
-          
-            //const rpc = new eosjs_jsonrpc.JsonRpc('http://mainnet.eoscafeblock.com');
-         
         </script>
-
-
 
     </body>
 </html>
