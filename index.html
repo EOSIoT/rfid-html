@@ -36,11 +36,13 @@
         <script src='dist-web/eosjs-jssig.js'></script>
         <script>
             // Specify an EOS blockchain API endpoint to connect to.
+            // Note: use https rather than http to prevent the browser from blocking if accessed
+            // via http.
 
             // Connect to the EOS Jungle2.0 Testnet. The testnet performs and operates
             // similarly to the mainnet but with unlimited free-to-access resources.  Because
             // resources are free, this network is operated on a best-effort basis.
-            const rpc = new eosjs_jsonrpc.JsonRpc('http://jungle2.cryptolions.io:80');
+            const rpc = new eosjs_jsonrpc.JsonRpc('https://jungle2.cryptolions.io');
 
             // The EOS mainnet is the flagship network that rewards block miners (producers)
             // with tokens that exchange for real fiat currency - so there is incentive to maintain this
@@ -48,7 +50,7 @@
             // resources are scarce and come with a cost.  Currently this cost is too high (CPU).
             // We will be using the testnet for demonstration until the EOS core group figures out a 
             // solution to the CPU crunch.
-            //const rpc = new eosjs_jsonrpc.JsonRpc('http://eos.eoscafeblock.com');
+            //const rpc = new eosjs_jsonrpc.JsonRpc('https://eos.eoscafeblock.com');
 
             let pre = document.getElementsByTagName('textarea')[0];
 
