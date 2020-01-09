@@ -1,265 +1,279 @@
-<html>
+﻿<html>
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>EOSIoT RFID Demo</title>
     <script src='dist-web/eosjs-api.js'></script>
     <script src='dist-web/eosjs-jsonrpc.js'></script>
     <script src='dist-web/eosjs-jssig.js'></script>
-
     <script src="dist-web/ngeohash.js"></script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+    <link href="favicon.ico" type="image/x-icon" rel="icon">
+    <link href="favicon.ico" type="image/x-icon" rel="shortcut icon">
+    <meta name="description" content="Display data captured from an RFID tag data by an IoT device through the EOS blockchain on a map">
+    <meta name="keywords" content="rfid, iot, eos, blockchain, map, location, position, latitude, longitude, geohash">
+
 </head>
 <body>
-    <H1><u>EOSIoT RFID Demo</u></H1>
-    <H2>This simple web-app is running entirely in your browser.</H2>
-    <H2>The EOS blockchain is the server. </H2>
-    <H2>Your scanned RFID tag data is displayed below.</H2>
-    <H2>Scan a tag and see it show up here within seconds.</H2>
-    <br>
-    <u>Chain Info:</u>
-    <br>
-    <div id="chain_name">Name: EOS Jungle2.0 Testnet</div>
-    <div id="chain_id">ID: searching...</div>
-    <br>
-    Enter your RFID scanner device ID (e.g. 942140182):<br>
-    <input type="text" id="devid" value="0">
-    <button type="button" onclick="setDevId()">Apply</button>
-    <br><br>
-    Current scanner ID:
-    <p id="user_devid"></p>
-    <br>
-    RFID Scanner Data:<br>
-    <textarea name="textarea" rows="10" cols="100">Your RFID scanner data on the EOS blockchain shows up here when you enter a valid scanner device ID.
+    <div id="header">
+        <img src="eosiot_logo_small.png">
+        <H1>EOSIoT RFID Demo</H1>
+    </div>
+    <div style="width: 740px; text-align: left; margin: auto;">
+
+        <p>This simple web-app is running entirely in your browser.
+        The EOS blockchain is the server. 
+            </p>
+        <p>Your scanned RFID tag data is displayed below.
+        Scan a tag and see it show up here within seconds.</p>
+
+        <h2>Chain Info</h2>
+
+        <div id="chain_name">Name: EOS Jungle2.0 Testnet</div>
+        <div id="chain_id">ID: searching...</div>
+        <h2>RFID Scanner Data</h2>
+        Enter your RFID scanner device ID (e.g. 942140182):<br>
+        <input type="text" id="devid" value="0">
+        <button type="button" onclick="setDevId()">Apply</button>
+        <br><br>
+        Current scanner ID:
+        <p id="user_devid"></p>
+        
+
+        <textarea name="textarea" rows="10" cols="100">Your RFID scanner data on the EOS blockchain shows up here when you enter a valid scanner device ID.
         </textarea>
-    <br><br>
+        <br><br>
 
-    <script>
+        <script>
 
-        // These are records pushed by the scanner for use with the map: location and time
-        var dataRecords = [];
+            // These are records pushed by the scanner for use with the map: location and time
+            var dataRecords = [];
 
-        // Specify an EOS blockchain API endpoint to connect to.
-        // Note: use https rather than http to prevent the browser from blocking if accessed
-        // via http.
+            // Specify an EOS blockchain API endpoint to connect to.
+            // Note: use https rather than http to prevent the browser from blocking if accessed
+            // via http.
 
-        // Connect to the EOS Jungle2.0 Testnet. The testnet performs and operates
-        // similarly to the mainnet but with unlimited free-to-access resources.  Because
-        // resources are free, this network is operated on a best-effort basis.
-        const rpc = new eosjs_jsonrpc.JsonRpc('https://jungle2.cryptolions.io');
+            // Connect to the EOS Jungle2.0 Testnet. The testnet performs and operates
+            // similarly to the mainnet but with unlimited free-to-access resources.  Because
+            // resources are free, this network is operated on a best-effort basis.
+            const rpc = new eosjs_jsonrpc.JsonRpc('https://jungle2.cryptolions.io');
 
-        // The EOS mainnet is the flagship network that rewards block miners (producers)
-        // with tokens that exchange for real fiat currency - so there is incentive to maintain this
-        // network.  However because there is real value in the tokens powering this network,
-        // resources are scarce and come with a cost.  Currently this cost is too high (CPU).
-        // We will be using the testnet for demonstration until the EOS core group figures out a
-        // solution to the CPU crunch.
-        //const rpc = new eosjs_jsonrpc.JsonRpc('https://eos.eoscafeblock.com');
+            // The EOS mainnet is the flagship network that rewards block miners (producers)
+            // with tokens that exchange for real fiat currency - so there is incentive to maintain this
+            // network.  However because there is real value in the tokens powering this network,
+            // resources are scarce and come with a cost.  Currently this cost is too high (CPU).
+            // We will be using the testnet for demonstration until the EOS core group figures out a
+            // solution to the CPU crunch.
+            //const rpc = new eosjs_jsonrpc.JsonRpc('https://eos.eoscafeblock.com');
 
-        let pre = document.getElementsByTagName('textarea')[0];
+            let pre = document.getElementsByTagName('textarea')[0];
 
-        document.getElementById('devid').addEventListener('keydown', function onEvent(event) {
-            if (event.key === "Enter") {
-                setDevId();
-                return false;
+            document.getElementById('devid').addEventListener('keydown', function onEvent(event) {
+                if (event.key === "Enter") {
+                    setDevId();
+                    return false;
+                }
+            });
+
+            var HasDevId = false;
+            var DevId;
+
+            function setDevId() {
+                try {
+                    var devIdBoxValue = document.getElementById('devid').value;
+                    DevId = parseInt(devIdBoxValue, 10);
+                    document.getElementById("user_devid").innerHTML = DevId.toString(10);
+                    HasDevId = true;
+                    dataRecords.length = 0; // reset the data records
+                } catch (e) {
+                    alert("invalid device ID.  Require number." + e);
+                }
             }
-        });
 
-        var HasDevId = false;
-        var DevId;
+            // try to connect to the chain
 
-        function setDevId() {
-            try {
-                var devIdBoxValue = document.getElementById('devid').value;
-                DevId = parseInt(devIdBoxValue, 10);
-                document.getElementById("user_devid").innerHTML = DevId.toString(10);
-                HasDevId = true;
-                dataRecords.length = 0; // reset the data records
-            } catch (e) {
-                alert("invalid device ID.  Require number." + e);
+            async function pollChain() {
+                try {
+
+                    const resp = await rpc.get_info({
+                        json: true              // Get the response as json
+                    });
+                    document.getElementById("chain_id").innerHTML = "ID: " + resp.chain_id;
+                } catch (e) {
+                    pre.textContent = 'Error contacting blockchain! Caught exception: ' + e;
+                    if (e instanceof eosjs_jsonrpc.RpcError)
+                        pre.textContent += '\n\n' + JSON.stringify(e.json, null, 2);
+                }
             }
-        }
 
-        // try to connect to the chain
+            pollChain();
 
-        async function pollChain() {
-            try {
+            async function pollData() {
 
-                const resp = await rpc.get_info({
-                    json: true              // Get the response as json
-                });
-                document.getElementById("chain_id").innerHTML = "ID: " + resp.chain_id;
-            } catch (e) {
-                pre.textContent = 'Error contacting blockchain! Caught exception: ' + e;
-                if (e instanceof eosjs_jsonrpc.RpcError)
-                    pre.textContent += '\n\n' + JSON.stringify(e.json, null, 2);
-            }
-        }
+                var featureData = [];
 
-        pollChain();
-
-        async function pollData() {
-
-            var featureData = [];
-
-            if (!HasDevId) return;
-            /*
-                    {
-          "rows": [
-            {
-              "key": "eosiot11node",
-              "latency_stats": {
-                "min": "3.00000000000000000",
-                "max": "1556324782.00000000000000000",
-                "var": "0.00000000000000000",
-                "mean": "42062839.10810810327529907"
-              },
-              "scan_data": [
+                if (!HasDevId) return;
+                /*
+                        {
+              "rows": [
                 {
-                  "scan_time": 4567,
-                  "recv_time": 1556329349,
-                  "dev_id": 1234,
-                  "tag_id": [
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                    6,
-                    7
-                  ],
-                  "geohash": "abcdef"
-                },
-                */
+                  "key": "eosiot11node",
+                  "latency_stats": {
+                    "min": "3.00000000000000000",
+                    "max": "1556324782.00000000000000000",
+                    "var": "0.00000000000000000",
+                    "mean": "42062839.10810810327529907"
+                  },
+                  "scan_data": [
+                    {
+                      "scan_time": 4567,
+                      "recv_time": 1556329349,
+                      "dev_id": 1234,
+                      "tag_id": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7
+                      ],
+                      "geohash": "abcdef"
+                    },
+                    */
 
-            try {
+                try {
 
-                const resp = await rpc.get_table_rows({
-                    json: true,              // Get the response as json
-                    code: 'eosiot12rfid',     // Contract that we target
-                    scope: 'eosiot12rfid',         // Account that owns the data
-                    table: 'scanners',        // Table name
-                    limit: 10,               // Maximum number of rows (scanners) that we want to get
-                });
+                    const resp = await rpc.get_table_rows({
+                        json: true,              // Get the response as json
+                        code: 'eosiot12rfid',     // Contract that we target
+                        scope: 'eosiot12rfid',         // Account that owns the data
+                        table: 'scanners',        // Table name
+                        limit: 10,               // Maximum number of rows (scanners) that we want to get
+                    });
 
-                pre.textContent = "Request submitted\n";
+                    pre.textContent = "Request submitted\n";
 
-                var rows = resp.rows;
+                    var rows = resp.rows;
 
-                // Construct list of scanned data that matches the given devID
-                var scannedData = [];
+                    // Construct list of scanned data that matches the given devID
+                    var scannedData = [];
 
-                // There is one row for each scanner account registered in the system with data
-                // For the demo there is just the one demo account
-                for (var row in rows) {
-                    console.log(rows[row]);
-                    var accountName = rows[row].key;
-                    if (accountName == "eosiot11node") {
-                        var data = rows[row].scan_data;
+                    // There is one row for each scanner account registered in the system with data
+                    // For the demo there is just the one demo account
+                    for (var row in rows) {
+                        console.log(rows[row]);
+                        var accountName = rows[row].key;
+                        if (accountName == "eosiot11node") {
+                            var data = rows[row].scan_data;
 
-                        // Scanner data is provided oldest first, newest last -> we want to reverse that
-                        // and show the newest first.
-                        for (var i = data.length - 1; i >= 0; i--) {
-                            var d = data[i];
-                            console.log(d.dev_id, DevId);
-                            if (d.dev_id == DevId) {
-                                // This record matches device ID
-                                var scanTime = new Date(d.scan_time * 1000);
-                                var tagId = "";
-                                for (var j = 0; j < d.tag_id.length; j++) {
-                                    tagId += d.tag_id[j].toString(16);
-                                    if (j < d.tag_id.length - 1) tagId += " ";
-                                }
-                                var geohash = "";
-                                if (d.geohash != undefined) {
-                                    geohash = d.geohash;
-                                }
-
-                                // Construct strings to print in the testbox window.
-                                var record = scanTime.toISOString() + " | " + tagId + " | " + geohash;
-
-                                if (geohash != undefined && geohash != "" && geohash.length > 0) {
-
-                                    // Contruct data records for use with the map.
-                                    var loc = ngeohash.decode(geohash);
-
-                                    if (loc != undefined) {
-                                        console.log("decoded: " + loc.latitude, loc.longitude);
-                                        var dataRecord = {
-                                            time: scanTime, // date object
-                                            lat: loc.latitude,
-                                            lon: loc.longitude,
-                                        }
-
-                                        record += " | " + loc.latitude + ", " + loc.longitude;
-                                        //dataRecords.length = 0;
-                                        //dataRecords.push(dataRecord);
-
-                                        var geojsonFeature = {
-                                            "type": "Feature",
-                                            "properties": {
-                                                "account": accountName,
-                                                "id": d.dev_id,
-                                                "popupContent": record
-                                            },
-                                            "geometry": {
-                                                "type": "Point",
-                                                "coordinates": [loc.longitude, loc.latitude]
-                                            }
-                                        };
-
-                                        var feature = L.geoJSON(geojsonFeature, {
-                                            onEachFeature: onEachFeature
-                                        });
-
-                                        feature.addTo(map);
-
-                                        featureData.push(feature);
-
+                            // Scanner data is provided oldest first, newest last -> we want to reverse that
+                            // and show the newest first.
+                            for (var i = data.length - 1; i >= 0; i--) {
+                                var d = data[i];
+                                console.log(d.dev_id, DevId);
+                                if (d.dev_id == DevId) {
+                                    // This record matches device ID
+                                    var scanTime = new Date(d.scan_time * 1000);
+                                    var tagId = "";
+                                    for (var j = 0; j < d.tag_id.length; j++) {
+                                        tagId += d.tag_id[j].toString(16);
+                                        if (j < d.tag_id.length - 1) tagId += " ";
                                     }
-                                }
+                                    var geohash = "";
+                                    if (d.geohash != undefined) {
+                                        geohash = d.geohash;
+                                    }
 
-                                scannedData.push(record);
-                                console.log(record);
+                                    // Construct strings to print in the testbox window.
+                                    var record = scanTime.toISOString() + " | " + tagId + " | " + geohash;
+
+                                    if (geohash != undefined && geohash != "" && geohash.length > 0) {
+
+                                        // Contruct data records for use with the map.
+                                        var loc = ngeohash.decode(geohash);
+
+                                        if (loc != undefined) {
+                                            console.log("decoded: " + loc.latitude, loc.longitude);
+                                            var dataRecord = {
+                                                time: scanTime, // date object
+                                                lat: loc.latitude,
+                                                lon: loc.longitude,
+                                            }
+
+                                            record += " | " + loc.latitude + ", " + loc.longitude;
+                                            //dataRecords.length = 0;
+                                            //dataRecords.push(dataRecord);
+
+                                            var geojsonFeature = {
+                                                "type": "Feature",
+                                                "properties": {
+                                                    "account": accountName,
+                                                    "id": d.dev_id,
+                                                    "popupContent": record
+                                                },
+                                                "geometry": {
+                                                    "type": "Point",
+                                                    "coordinates": [loc.longitude, loc.latitude]
+                                                }
+                                            };
+
+                                            var feature = L.geoJSON(geojsonFeature, {
+                                                onEachFeature: onEachFeature
+                                            });
+
+                                            feature.addTo(map);
+
+                                            featureData.push(feature);
+
+                                        }
+                                    }
+
+                                    scannedData.push(record);
+                                    console.log(record);
+                                }
                             }
                         }
                     }
-                }
 
-                if (scannedData.length > 0) {
-                    for (var d in scannedData) {
-                        pre.textContent += scannedData[d] + "\n";
+                    if (scannedData.length > 0) {
+                        for (var d in scannedData) {
+                            pre.textContent += scannedData[d] + "\n";
+                        }
+                    } else {
+                        pre.textContent += "No data found for ID " + DevId + "\n";
                     }
-                } else {
-                    pre.textContent += "No data found for ID " + DevId + "\n";
+
+                } catch (e) {
+                    pre.textContent = 'Error polling blockchain! Caught exception: ' + e;
+                    if (e instanceof eosjs_jsonrpc.RpcError)
+                        pre.textContent += '\n\n' + JSON.stringify(e.json, null, 2);
                 }
 
-            } catch (e) {
-                pre.textContent = 'Error polling blockchain! Caught exception: ' + e;
-                if (e instanceof eosjs_jsonrpc.RpcError)
-                    pre.textContent += '\n\n' + JSON.stringify(e.json, null, 2);
+                var group = new L.featureGroup(featureData);
+                map.fitBounds(group.getBounds().pad(0.5));
             }
 
-            var group = new L.featureGroup(featureData);
-            map.fitBounds(group.getBounds().pad(0.5));
-        }
+            setInterval(pollData, 5000);
 
-        setInterval(pollData, 5000);
+        </script>
 
-    </script>
-
+    </div>
     <div id="map" style="height: 500px; width: 1000px"></div>
     <script>
 
         function onEachFeature(feature, layer) {
-		var popupContent = "";
+            var popupContent = "";
 
-		if (feature.properties && feature.properties.popupContent) {
-            popupContent += "<p>Account: " + feature.properties.account + " id: " + feature.properties.id + "</p>";
-            popupContent += feature.properties.popupContent;
-		}
+            if (feature.properties && feature.properties.popupContent) {
+                popupContent += "<p>Account: " + feature.properties.account + " id: " + feature.properties.id + "</p>";
+                popupContent += feature.properties.popupContent;
+            }
 
-		layer.bindPopup(popupContent);
+            layer.bindPopup(popupContent);
         }
 
         // Create a map
@@ -275,9 +289,13 @@
 
     </script>
     <br />
-    <li><a href="https://github.com/EOSIoT/rfid-scanner-node">Open source RFID device software.</a></li>
-    <li><a href="https://github.com/EOSIoT/rfid-contract">The EOS RFID smart contract.</a></li>
-    <li><a href="https://github.com/EOSIoT/rfid-html">This web-app's source code.</a></li>
+    <div style="width: 740px; text-align: left; margin: auto;">
+        <ul>
+            <li><a href="https://github.com/EOSIoT/rfid-scanner-node">Open source RFID device software.</a></li>
+            <li><a href="https://github.com/EOSIoT/rfid-contract">The EOS RFID smart contract.</a></li>
+            <li><a href="https://github.com/EOSIoT/rfid-html">This web-app's source code.</a></li>
+        </ul>
+    </div>
     <br>
     &copy;EOSIoT 2020.  EOSIoT builds value by bringing IoT and blockchain together.
 

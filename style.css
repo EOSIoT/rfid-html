@@ -1,0 +1,123 @@
+body {
+    font-family: sans-serif;
+    font-weight: bold;
+    text-align: center;
+}
+
+hr {
+    border-width: 0;
+    height: 1px;
+    color: black;
+    background-color: black;
+}
+
+p {
+    font-weight: normal;
+}
+
+img {
+    text-decoration: none;
+    border: 0;
+}
+
+li p {
+    display: inline;
+}
+
+h2 {
+    margin-top: 50px;
+}
+    
+#header {
+    padding: 20px;
+    text-align: center;
+    font-size: 200%;
+}
+
+#header img {
+    vertical-align: middle;
+}
+
+#header a {
+    text-decoration: none;
+    color: black;
+}
+
+#header a:visited {
+    color: black;
+}
+
+#title {
+    font-size: 90%;
+    font-weight: normal;
+}
+
+#notes {
+    background: #BBCCFF;
+    font-size: 90%;
+    border: 1px;
+    border-color: #9999FF;
+    border-style: solid;
+    text-align: left;
+    width: 640px;
+    padding: 15px;
+    margin: 5px auto;
+}
+
+#content {
+    padding: 15px;
+    text-align: center;
+    width: 20em;
+    margin: auto;
+}
+
+input {
+    border: 1px;
+    border-style: solid;
+    border-color: black;
+}
+
+#footer {
+    font-size: 60%;
+    font-weight: normal;
+    padding: 20px;
+    margin: auto;
+}
+
+#footer hr {
+    width: 100px;
+}
+
+#coordinates {
+    padding: 20px;
+    text-align: center;
+}
+
+#links {
+    text-align: center;
+}
+
+#links img {
+    vertical-align: middle;
+    padding: 15px;
+}
+
+#map {
+    border: 1px;
+    border-color: #9999FF;
+    border-style: solid;
+    margin: 0 auto;
+}
+
+#map-go {
+    width: 70px;
+    margin: 3px;
+    display: block;
+}
+
+#map-reset {
+    width: 70px;
+    margin: 3px;
+    margin-bottom: 20px;
+    display: block;
+}
